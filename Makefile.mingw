@@ -1,0 +1,17 @@
+# For GNU make
+SHELL = %SystemRoot%/System32/cmd.exe
+CPP = g++
+RM = del /q
+
+DEBUG= -O2
+#DEBUG = -g
+CFLAGS = -Wall -Wshadow -msse2 -mfpmath=sse
+LDFLAGS = -static -s
+#LDFLAGS = -static
+LIBS = -lole32 -lstrmiids -loleaut32
+
+CommandCam.exe: CommandCam.cpp
+	$(CPP) $(DEBUG) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+
+clean:
+	-$(RM) CommandCam.exe
