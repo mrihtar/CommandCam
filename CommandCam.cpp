@@ -27,19 +27,21 @@
 //
 #ifdef __MINGW32__
 #define STRSAFE_NO_DEPRECATE // MinGW: ignore strcpy/sprintf warnings
+#pragma GCC diagnostic ignored "-Wnarrowing"
 #define strcasecmp strcmpi
 #else
-#pragma warning (disable:4995)  // W3: name was marked as #pragma deprecated
-#pragma warning (disable:4996)  // W3: deprecated declaration (_CRT_SECURE_NO_WARNINGS)
-#pragma warning (disable:4711)  // W1: function selected for inline expansion
-#pragma warning (disable:4710)  // W4: function not inlined
-#pragma warning (disable:4127)  // W4: conditional expression is constant
-#pragma warning (disable:4820)  // W4: bytes padding added
-#pragma warning (disable:4668)  // W4: symbol not defined as a macro
-#pragma warning (disable:4365)  // W4: conversion -> signed/unsigned mismatch
-#pragma warning (disable:4242)  // W4: conversion -> possible loss of data
-#pragma warning (disable:4244)  // W3,W4: conversion -> possible loss of data
-#pragma warning (disable:4917)  // W1: GUID can only be associated with a class
+#pragma warning (disable:4995) // W3: name was marked as #pragma deprecated
+#pragma warning (disable:4996) // W3: deprecated declaration (_CRT_SECURE_NO_WARNINGS)
+#pragma warning (disable:4711) // W1: function selected for inline expansion
+#pragma warning (disable:4710) // W4: function not inlined
+#pragma warning (disable:4127) // W4: conditional expression is constant
+#pragma warning (disable:4820) // W4: bytes padding added
+#pragma warning (disable:4668) // W4: symbol not defined as a macro
+#pragma warning (disable:4365) // W4: conversion -> signed/unsigned mismatch
+#pragma warning (disable:4242) // W4: conversion -> possible loss of data
+#pragma warning (disable:4244) // W3,W4: conversion -> possible loss of data
+#pragma warning (disable:4917) // W1: GUID can only be associated with a class
+#pragma warning (disable:4309) // W2: truncation of constant value
 #define strcasecmp _stricmp
 #endif
 
@@ -302,6 +304,129 @@ void fix_bmiHeader(VIDEOINFOHEADER *pVih, long bufferSize)
 } // fix_bmiHeader
 
 
+const char jpeg_header[] = {
+  0xff, 0xd8, // SOI
+  0xff, 0xe0, // APP0
+  0x00, 0x10, // APP0 header size (including this field, but excluding preceding)
+  0x4a, 0x46, 0x49, 0x46, 0x00, // ID string 'JFIF\0'
+  0x01, 0x01, // version
+  0x00,       // bits per type
+  0x00, 0x00, // X density
+  0x00, 0x00, // Y density
+  0x00,       // X thumbnail size
+  0x00        // Y thumbnail size
+};
+
+const int dht_segment_size = 420;
+const char dht_segment_head[] = { 0xFF, 0xC4, 0x01, 0xA2, 0x00 };
+const char dht_segment_frag[] = {
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+  0x0a, 0x0b, 0x01, 0x00, 0x03, 0x01, 0x01, 0x01, 0x01, 0x01,
+  0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+const char mjpeg_bits_dc_luminance[17] =
+{ /* 0-base */ 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
+const char mjpeg_val_dc[12] =
+{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+
+const char mjpeg_bits_ac_luminance[17] =
+{ /* 0-base */ 0, 0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 0x7d };
+const char mjpeg_val_ac_luminance[] = {
+  0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12,
+  0x21, 0x31, 0x41, 0x06, 0x13, 0x51, 0x61, 0x07,
+  0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08,
+  0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0,
+  0x24, 0x33, 0x62, 0x72, 0x82, 0x09, 0x0a, 0x16,
+  0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28,
+  0x29, 0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39,
+  0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49,
+  0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
+  0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69,
+  0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79,
+  0x7a, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89,
+  0x8a, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98,
+  0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7,
+  0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6,
+  0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5,
+  0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4,
+  0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xe1, 0xe2,
+  0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea,
+  0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
+  0xf9, 0xfa
+};
+
+const char mjpeg_bits_ac_chrominance[17] =
+{ /* 0-base */ 0, 0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 0x77 };
+const char mjpeg_val_ac_chrominance[] = {
+  0x00, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21,
+  0x31, 0x06, 0x12, 0x41, 0x51, 0x07, 0x61, 0x71,
+  0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91,
+  0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0,
+  0x15, 0x62, 0x72, 0xd1, 0x0a, 0x16, 0x24, 0x34,
+  0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26,
+  0x27, 0x28, 0x29, 0x2a, 0x35, 0x36, 0x37, 0x38,
+  0x39, 0x3a, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
+  0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,
+  0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+  0x69, 0x6a, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78,
+  0x79, 0x7a, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
+  0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95, 0x96,
+  0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3, 0xa4, 0xa5,
+  0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4,
+  0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3,
+  0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9, 0xca, 0xd2,
+  0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda,
+  0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9,
+  0xea, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
+  0xf9, 0xfa
+};
+
+char *append(char *buf, const char *src, int size)
+{
+  memcpy(buf, src, size);
+  return buf + size;
+}
+
+char *append_dht_segment(char *buf)
+{
+  buf = append(buf, dht_segment_head, sizeof(dht_segment_head));
+  buf = append(buf, mjpeg_bits_dc_luminance + 1, 16);
+  buf = append(buf, dht_segment_frag, sizeof(dht_segment_frag));
+  buf = append(buf, mjpeg_val_dc, 12);
+  *(buf++) = 0x10;
+  buf = append(buf, mjpeg_bits_ac_luminance + 1, 16);
+  buf = append(buf, mjpeg_val_ac_luminance, 162);
+  *(buf++) = 0x11;
+  buf = append(buf, mjpeg_bits_ac_chrominance + 1, 16);
+  buf = append(buf, mjpeg_val_ac_chrominance, 162);
+  return buf;
+}
+
+// Add missing default huffman table to MJPG image header
+void mjpeg_fix(long *imgBufferSize)
+{
+  int skip = (imgBuffer[4] << 8) + imgBuffer[5] + 4;
+  if (*imgBufferSize < skip) return; // input is truncated
+
+  long tmpBufferSize = sizeof(jpeg_header) + dht_segment_size +
+                       *imgBufferSize - skip;
+
+  char *tmpBuffer = new char[tmpBufferSize];
+  if (!tmpBuffer)
+    exit_message("Could not allocate data buffer for temp buffer\n", 45);
+
+  char *tmpP = tmpBuffer;
+  tmpP = append(tmpP, jpeg_header, sizeof(jpeg_header));
+  tmpP = append_dht_segment(tmpP);
+  tmpP = append(tmpP, imgBuffer + skip, *imgBufferSize - skip);
+
+  delete[] imgBuffer;
+  imgBuffer = tmpBuffer; 
+  *imgBufferSize = tmpBufferSize;
+} // mjpeg_fix
+
+
 // Convert string to fourcc code
 DWORD str2fourcc(char *sCode)
 {
@@ -386,6 +511,7 @@ int main(int argc, char **argv)
   int device_number = 1;
   char device_name[256];
   char filename[256];
+  int fn_forced = 0;
   int want_size = 0;
   int width = 0;
   int height = 0;
@@ -413,7 +539,7 @@ int main(int argc, char **argv)
 
   // Information message
   if (!quiet) {
-    fprintf(stdout, "CommandCam 2.6  Copyright (c) 2016 Ted Burke, Matjaz Rihtar  (Nov 16, 2016)\n");
+    fprintf(stdout, "CommandCam 2.7  Copyright (c) 2016 Ted Burke, Matjaz Rihtar  (Nov 17, 2016)\n");
     fprintf(stdout, "https://batchloaf.wordpress.com, https://github.com/mrihtar/CommandCam\n");
     fprintf(stdout, "\n");
   }
@@ -457,6 +583,8 @@ int main(int argc, char **argv)
       if (++n < argc) {
         // Copy provided string into filename
         strncpy(filename, argv[n], 255); filename[255] = '\0';
+
+        fn_forced = 1;
       }
       else
         exit_message("Error: no filename specified\n", 1);
@@ -955,15 +1083,27 @@ int main(int argc, char **argv)
 
     long rgbBufferSize = 0;
     fourcc = pVih->bmiHeader.biCompression;
-    if (pVih->bmiHeader.biCompression == YUY2) {
+    if (fourcc == YUY2) {
       // Convert YUY2 image to RGB image
       yuy2_rgb(pVih->bmiHeader.biWidth, pVih->bmiHeader.biHeight, &rgbBufferSize);
       fix_bmiHeader(pVih, rgbBufferSize);
     }
-    else if (pVih->bmiHeader.biCompression == I420) {
+    else if (fourcc == I420) {
       // Convert I420 image to RGB image
       i420_rgb(pVih->bmiHeader.biWidth, pVih->bmiHeader.biHeight, &rgbBufferSize);
       fix_bmiHeader(pVih, rgbBufferSize);
+    }
+    else if (fourcc == MJPG) {
+      // Fix MJPG header (add default huffman table) if necessary
+      if (memcmp("AVI1", imgBuffer + 6, 4) == 0) mjpeg_fix(&imgBufferSize);
+
+      // Allocate buffer for RGB image
+      rgbBuffer = new char[imgBufferSize];
+      if (!rgbBuffer)
+        exit_message("Could not allocate data buffer for RGB image\n", 45);
+
+      memcpy(rgbBuffer, imgBuffer, imgBufferSize);
+      rgbBufferSize = imgBufferSize;
     }
     else {
       // Allocate buffer for RGB image
@@ -988,19 +1128,14 @@ int main(int argc, char **argv)
     bfh.bfSize = sizeof(bfh) + rgbBufferSize + cbBitmapInfoSize;
     bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + cbBitmapInfoSize;
 
-#if 1
-    char *s;
-    if (pVih->bmiHeader.biCompression == MJPG) {
-      // For MJPG change filename extension to .jpg
-      if ((s = strrchr(filename, '.')) != NULL) *s = '\0';
-      strcat(filename, ".jpg");
+    if (!fn_forced) {
+      char *s;
+      if (fourcc == MJPG) {
+        // For MJPG change filename extension to .jpg
+        if ((s = strrchr(filename, '.')) != NULL) *s = '\0';
+        strcat(filename, ".jpg");
+      }
     }
-    else {
-      // Everything else is .bmp (forced)
-      if ((s = strrchr(filename, '.')) != NULL) *s = '\0';
-      strcat(filename, ".bmp");
-    }
-#endif
 
     // Open output file
     HANDLE hf = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_WRITE,
@@ -1010,7 +1145,7 @@ int main(int argc, char **argv)
 
     DWORD dwWritten = 0;
 
-    if (pVih->bmiHeader.biCompression != MJPG) {
+    if (fourcc != MJPG) {
       // Write the file header
       WriteFile(hf, &bfh, sizeof(bfh), &dwWritten, NULL);
       WriteFile(hf, HEADER(pVih), cbBitmapInfoSize, &dwWritten, NULL);

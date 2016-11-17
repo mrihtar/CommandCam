@@ -1,9 +1,11 @@
 ## CommandCam
 
 The original author of **CommandCam** is [Ted Burke]. This repository is a
-fork of [tedburke/CommandCam] and contains an enhanced version of the original.  
+fork of [tedburke/CommandCam] and contains an enhanced version of the original.
 CommandCam is published under the [GNU General Public License (version 3)]
-and is completely free to download and use.
+and is completely free to download and use. You can download the precompiled
+version of **CommandCam** for Windows along with source code from here:
+[CommandCam-2.7.zip]
 
 ### Features
 
@@ -144,9 +146,6 @@ Makefiles or directly:
 - MinGW g++  
   ```g++ CommandCam.cpp -lole32 -lstrmiids -loleaut32 -static -o CommandCam.exe```
 
-You can download the precompiled version of **CommandCam** for Windows along
-with source code from here: [CommandCam-2.6.zip]
-
 [Ted Burke]: https://batchloaf.wordpress.com/commandcam/
 [tedburke/CommandCam]: https://github.com/tedburke/CommandCam
 [GNU General Public License (version 3)]: https://www.gnu.org/licenses/gpl.txt
@@ -155,4 +154,4 @@ with source code from here: [CommandCam-2.6.zip]
 [What is FOURCC?]: http://www.fourcc.org/fourcc.php
 [YUV pixel formats]: https://www.fourcc.org/yuv.php
 [fourcc code]: http://www.fourcc.org/fourcc.php
-[CommandCam-2.6.zip]: https://app.box.com/s/gbeqxo1hpe3hm5jmv7l96oxje3vd0zbv
+[CommandCam-2.7.zip]: https://app.box.com/s/gbeqxo1hpe3hm5jmv7l96oxje3vd0zbv
