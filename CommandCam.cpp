@@ -1074,6 +1074,7 @@ int main(int argc, char **argv)
   if (hr != S_OK)
     exit_message("Could not get media type\n", 43);
 
+  bool unknown_format = false;
   bool write_header = true;
   // Retrieve format information
   VIDEOINFOHEADER *pVih = NULL;
@@ -1120,6 +1121,7 @@ int main(int argc, char **argv)
       if (fourcc != BI_RGB) {
         fprintf(stderr, "Unsupported image format (%s) captured\n",
                          fourcc2str(fourcc));
+        unknown_format = true;
         write_header = false;
       }
     }
@@ -1143,6 +1145,11 @@ int main(int argc, char **argv)
         // For MJPG change filename extension to .jpg
         if ((s = strrchr(filename, '.')) != NULL) *s = '\0';
         strcat(filename, ".jpg");
+      }
+      else if (unknown_format) {
+        // For unknown format change filename extension to .img
+        if ((s = strrchr(filename, '.')) != NULL) *s = '\0';
+        strcat(filename, ".img");
       }
     }
 
