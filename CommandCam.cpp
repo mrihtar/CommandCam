@@ -16,7 +16,8 @@
 // along with this program (see the file "COPYING").
 // If not, see <http://www.gnu.org/licenses/>.
 //
-// Website: https://batchloaf.wordpress.com
+// Website: https://batchloaf.wordpress.com/commandcam/
+//          https://github.com/mrihtar/CommandCam
 //
 // To compile using the MSVC++ compiler:
 //   cl CommandCam.cpp ole32.lib strmiids.lib oleaut32.lib
@@ -195,7 +196,7 @@ void yuy2_rgb(long width, long height, long *rgbBufferSize)
   // Allocate buffer for RGB image
   rgbBuffer = new char[*rgbBufferSize];
   if (!rgbBuffer)
-    exit_message("Could not allocate data buffer for RGB image\n", 1);
+    exit_message("Could not allocate data buffer for RGB image\n", 44);
 
   char *imgP = imgBuffer;
   // Windows bitmap rows are upside down!
@@ -253,7 +254,7 @@ void i420_rgb(long width, long height, long *rgbBufferSize)
   // Allocate buffer for RGB image
   rgbBuffer = new char[*rgbBufferSize];
   if (!rgbBuffer)
-    exit_message("Could not allocate data buffer for RGB image\n", 1);
+    exit_message("Could not allocate data buffer for RGB image\n", 45);
 
   char *imgP = imgBuffer;
   // Windows bitmap rows are upside down!
@@ -414,7 +415,7 @@ void mjpeg_fix(long *imgBufferSize)
 
   char *tmpBuffer = new char[tmpBufferSize];
   if (!tmpBuffer)
-    exit_message("Could not allocate data buffer for temp buffer\n", 45);
+    exit_message("Could not allocate data buffer for temp image\n", 46);
 
   char *tmpP = tmpBuffer;
   tmpP = append(tmpP, jpeg_header, sizeof(jpeg_header));
@@ -511,11 +512,11 @@ int main(int argc, char **argv)
   int device_number = 1;
   char device_name[256];
   char filename[256];
-  int fn_forced = 0;
-  int want_size = 0;
+  bool fn_forced = false;
+  bool want_size = false;
   int width = 0;
   int height = 0;
-  int want_fourcc = 0;
+  bool want_fourcc = false;
   DWORD fourcc = BI_RGB;
 
   // Other variables
@@ -539,7 +540,7 @@ int main(int argc, char **argv)
 
   // Information message
   if (!quiet) {
-    fprintf(stdout, "CommandCam 2.7  Copyright (c) 2016 Ted Burke, Matjaz Rihtar  (Nov 17, 2016)\n");
+    fprintf(stdout, "CommandCam 2.8  Copyright (c) 2016 Ted Burke, Matjaz Rihtar  (Nov 17, 2016)\n");
     fprintf(stdout, "https://batchloaf.wordpress.com, https://github.com/mrihtar/CommandCam\n");
     fprintf(stdout, "\n");
   }
@@ -584,26 +585,26 @@ int main(int argc, char **argv)
         // Copy provided string into filename
         strncpy(filename, argv[n], 255); filename[255] = '\0';
 
-        fn_forced = 1;
+        fn_forced = true;
       }
       else
-        exit_message("Error: no filename specified\n", 1);
+        exit_message("Error: no filename specified\n", 2);
     }
     else if (strcasecmp(argv[n], "/delay") == 0) {
       // Set snapshot delay to specified value
       if (++n < argc) snapshot_delay = atoi(argv[n]);
-      else exit_message("Error: no delay specified\n", 2);
+      else exit_message("Error: no delay specified\n", 3);
 
       if (snapshot_delay < 0)
-        exit_message("Error: invalid delay specified\n", 2);
+        exit_message("Error: invalid delay specified\n", 3);
     }
     else if (strcasecmp(argv[n], "/devnum") == 0) {
       // Set device number to specified value
       if (++n < argc) device_number = atoi(argv[n]);
-      else exit_message("Error: no device number specified\n", 3);
+      else exit_message("Error: no device number specified\n", 4);
 
       if (device_number <= 0)
-        exit_message("Error: invalid device number\n", 3);
+        exit_message("Error: invalid device number\n", 4);
     }
     else if (strcasecmp(argv[n], "/devname") == 0) {
       // Set device name to specified value
@@ -615,7 +616,7 @@ int main(int argc, char **argv)
         device_number = 0;
       }
       else
-        exit_message("Error: no device name specified\n", 4);
+        exit_message("Error: no device name specified\n", 5);
     }
     else if (strcasecmp(argv[n], "/size") == 0) {
       // Set capture size to specified value
@@ -627,7 +628,7 @@ int main(int argc, char **argv)
         if (rn != 2)
           exit_message("Error: invalid size specified\n", 6);
 
-        want_size = 1;
+        want_size = true;
       }
       else exit_message("Error: no size specified\n", 6);
     }
@@ -639,7 +640,7 @@ int main(int argc, char **argv)
         fourcc = str2fourcc(strupcase(char_buffer));
 
         // Remember to check for desired fourcc
-        want_fourcc = 1;
+        want_fourcc = true;
       }
       else
         exit_message("Error: no fourcc specified\n", 7);
@@ -673,7 +674,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "  /devlist\n");
       fprintf(stderr, "  /details\n");
       fprintf(stderr, "  /quiet\n");
-      exit_message("", 9);
+      exit_message("", 1);
     }
 
     // Increment command line argument counter
@@ -683,38 +684,38 @@ int main(int argc, char **argv)
   // Intialise COM
   hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
   if (hr != S_OK)
-    exit_message("Could not initialise COM\n", 10);
+    exit_message("Could not initialise COM\n", 9);
 
   // Create filter graph
   hr = CoCreateInstance(CLSID_FilterGraph, NULL,
                         CLSCTX_INPROC_SERVER, IID_IGraphBuilder,
                         (void**)&pGraph);
   if (hr != S_OK)
-    exit_message("Could not create filter graph\n", 11);
+    exit_message("Could not create filter graph\n", 10);
 
   // Create capture graph builder
   hr = CoCreateInstance(CLSID_CaptureGraphBuilder2, NULL,
                         CLSCTX_INPROC_SERVER, IID_ICaptureGraphBuilder2,
                         (void **)&pBuilder);
   if (hr != S_OK)
-    exit_message("Could not create capture graph builder\n", 12);
+    exit_message("Could not create capture graph builder\n", 11);
 
   // Attach capture graph builder to graph
   hr = pBuilder->SetFiltergraph(pGraph);
   if (hr != S_OK)
-    exit_message("Could not attach capture graph builder to graph\n", 13);
+    exit_message("Could not attach capture graph builder to graph\n", 12);
 
   // Create system device enumerator
   hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL,
                         CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pDevEnum));
   if (hr != S_OK)
-    exit_message("Could not create system device enumerator\n", 14);
+    exit_message("Could not create system device enumerator\n", 13);
 
   // Video input device enumerator
   hr = pDevEnum->CreateClassEnumerator(
           CLSID_VideoInputDeviceCategory, &pEnum, 0);
   if (hr != S_OK)
-    exit_message("No video devices found\n", 15);
+    exit_message("No video devices found\n", 14);
 
   // If the user has included the "/devlist" command line
   // argument, just list available devices, then exit.
@@ -754,7 +755,7 @@ int main(int argc, char **argv)
               PIN_INFO PinInformation;
               hr = pPin->QueryPinInfo(&PinInformation);
               if (hr != S_OK)
-                exit_message("Could not get pin information\n", 16);
+                exit_message("Could not get pin information\n", 15);
               if (!quiet) fwprintf(stdout, L"     Pin: %s", PinInformation.achName);
 
               pConfig = NULL;
@@ -763,7 +764,7 @@ int main(int argc, char **argv)
                 int count = 0; int size = 0;
                 hr = pConfig->GetNumberOfCapabilities(&count, &size);
                 if (hr != S_OK)
-                  exit_message("\nCould not get number of capabilities\n", 17);
+                  exit_message("\nCould not get number of capabilities\n", 16);
                 if (!quiet) fprintf(stdout, ", %d caps\n", count);
 
                 BYTE *pSCC = new BYTE[size];
@@ -772,7 +773,7 @@ int main(int argc, char **argv)
                   AM_MEDIA_TYPE *pmt = NULL;
                   hr = pConfig->GetStreamCaps(ii, &pmt, pSCC);
                   if (hr != S_OK)
-                    exit_message("Could not get stream capability\n", 18);
+                    exit_message("Could not get stream capability\n", 17);
 
                   if (pmt->formattype == FORMAT_VideoInfo) {
                     VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER *)pmt->pbFormat;
@@ -810,7 +811,7 @@ int main(int argc, char **argv)
       } // if pEnum
       else {
         // Finished listing device, so exit program
-        if (n == 0) exit_message("No devices found\n", 19);
+        if (n == 0) exit_message("No devices found\n", 18);
         else exit_message("", 0);
       }
     }
@@ -831,7 +832,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "Device \"%s\" not found\n", device_name);
       else
         fprintf(stderr, "Device number %d not found\n", device_number);
-      exit_message("", 20);
+      exit_message("", 19);
     }
 
     // If device was specified by name rather than number...
@@ -854,7 +855,7 @@ int main(int argc, char **argv)
         if (strcasecmp(device_name, char_buffer) == 0) break;
       }
       else
-        exit_message("Error getting device name\n", 21);
+        exit_message("Error getting device name\n", 20);
     }
     else if (n >= device_number) break;
   }
@@ -870,19 +871,19 @@ int main(int argc, char **argv)
   hr = pMoniker->BindToObject(0, 0,
                               IID_IBaseFilter, (void**)&pCap);
   if (hr != S_OK)
-    exit_message("Could not create capture filter\n", 22);
+    exit_message("Could not create capture filter\n", 21);
 
   // Add capture filter to graph
   hr = pGraph->AddFilter(pCap, L"Capture Filter");
   if (hr != S_OK)
-    exit_message("Could not add capture filter to graph\n", 23);
+    exit_message("Could not add capture filter to graph\n", 22);
 
   // Create sample grabber filter
   hr = CoCreateInstance(CLSID_SampleGrabber, NULL,
                         CLSCTX_INPROC_SERVER, IID_IBaseFilter,
                         (void**)&pSampleGrabberFilter);
   if (hr != S_OK)
-    exit_message("Could not create Sample Grabber filter\n", 24);
+    exit_message("Could not create Sample Grabber filter\n", 23);
 
   // Query the ISampleGrabber interface of the sample grabber filter
 #ifdef __MINGW32__
@@ -893,17 +894,17 @@ int main(int argc, char **argv)
                                             (void**)&pSampleGrabber);
 #endif
   if (hr != S_OK)
-    exit_message("Could not get ISampleGrabber interface to sample grabber filter\n", 25);
+    exit_message("Could not get ISampleGrabber interface to sample grabber filter\n", 24);
 
   // Enable sample buffering in the sample grabber filter
-  hr = pSampleGrabber->SetBufferSamples(TRUE);
+  hr = pSampleGrabber->SetBufferSamples(true);
   if (hr != S_OK)
-    exit_message("Could not enable sample buffering in the sample grabber\n", 26);
+    exit_message("Could not enable sample buffering in the sample grabber\n", 25);
 
   // Set media type in sample grabber filter
   hr = pCap->EnumPins(&pEnumPins);
   if (hr != S_OK)
-    exit_message("Could not enumerate pins in base filter\n", 27);
+    exit_message("Could not enumerate pins in base filter\n", 26);
 
   IPin *pPin = NULL;
   bool formatSet = false;
@@ -912,7 +913,7 @@ int main(int argc, char **argv)
       PIN_INFO PinInformation;
       hr = pPin->QueryPinInfo(&PinInformation);
       if (hr != S_OK)
-        exit_message("Could not get pin information\n", 28);
+        exit_message("Could not get pin information\n", 27);
 
       pConfig = NULL;
       hr = pPin->QueryInterface(IID_IAMStreamConfig, (void**)&pConfig);
@@ -920,7 +921,7 @@ int main(int argc, char **argv)
         int count = 0; int size = 0;
         hr = pConfig->GetNumberOfCapabilities(&count, &size);
         if (hr != S_OK)
-          exit_message("Could not get number of capabilities\n", 29);
+          exit_message("Could not get number of capabilities\n", 28);
 
         BYTE *pSCC = new BYTE[size];
 
@@ -928,7 +929,7 @@ int main(int argc, char **argv)
           AM_MEDIA_TYPE *pmt = NULL;
           hr = pConfig->GetStreamCaps(ii, &pmt, pSCC);
           if (hr != S_OK)
-            exit_message("Could not get stream capability\n", 30);
+            exit_message("Could not get stream capability\n", 29);
 
           if (pmt->formattype == FORMAT_VideoInfo) {
             VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER *)pmt->pbFormat;
@@ -940,7 +941,7 @@ int main(int argc, char **argv)
                   if (pVih->bmiHeader.biCompression == fourcc) {
                     hr = pConfig->SetFormat(pmt);
                     if (hr != S_OK)
-                      exit_message("Could not set media type in sample grabber\n", 31);
+                      exit_message("Could not set media type in sample grabber\n", 30);
 
                     formatSet = true;
                   } // if fourcc
@@ -948,7 +949,7 @@ int main(int argc, char **argv)
                 else { // any fourcc
                   hr = pConfig->SetFormat(pmt);
                   if (hr != S_OK)
-                    exit_message("Could not set media type in sample grabber\n", 32);
+                    exit_message("Could not set media type in sample grabber\n", 31);
 
                   formatSet = true;
                 }
@@ -958,7 +959,7 @@ int main(int argc, char **argv)
               if (pVih->bmiHeader.biCompression == fourcc) {
                 hr = pConfig->SetFormat(pmt);
                 if (hr != S_OK)
-                  exit_message("Could not set media type in sample grabber\n", 33);
+                  exit_message("Could not set media type in sample grabber\n", 32);
 
                 formatSet = true;
               } // if fourcc
@@ -980,39 +981,39 @@ int main(int argc, char **argv)
   // Add sample grabber filter to filter graph
   hr = pGraph->AddFilter(pSampleGrabberFilter, L"SampleGrab");
   if (hr != S_OK)
-    exit_message("Could not add Sample Grabber to filter graph\n", 34);
+    exit_message("Could not add Sample Grabber to filter graph\n", 33);
 
   // Create Null Renderer filter
   hr = CoCreateInstance(CLSID_NullRenderer, NULL,
                         CLSCTX_INPROC_SERVER, IID_IBaseFilter,
                         (void**)&pNullRenderer);
   if (hr != S_OK)
-    exit_message("Could not create Null Renderer filter\n", 35);
+    exit_message("Could not create Null Renderer filter\n", 34);
 
   // Add Null Renderer filter to filter graph
   hr = pGraph->AddFilter(pNullRenderer, L"NullRender");
   if (hr != S_OK)
-    exit_message("Could not add Null Renderer to filter graph\n", 36);
+    exit_message("Could not add Null Renderer to filter graph\n", 35);
 
   // Connect up the filter graph's capture stream
   hr = pBuilder->RenderStream(&PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video,
                               pCap,  pSampleGrabberFilter, pNullRenderer);
   if (hr != S_OK)
-    exit_message("Could not render capture video stream\n", 37);
+    exit_message("Could not render capture video stream\n", 36);
 
   // Connect up the filter graph's preview stream
   if (show_preview_window > 0) {
     hr = pBuilder->RenderStream(&PIN_CATEGORY_PREVIEW, &MEDIATYPE_Video,
                                 pCap, NULL, NULL);
     if (hr != S_OK && hr != VFW_S_NOPREVIEWPIN)
-      exit_message("Could not render preview video stream\n", 38);
+      exit_message("Could not render preview video stream\n", 37);
   }
 
   // Get media control interfaces to graph builder object
   hr = pGraph->QueryInterface(IID_IMediaControl,
                               (void**)&pMediaControl);
   if (hr != S_OK)
-    exit_message("Could not get media control interface\n", 39);
+    exit_message("Could not get media control interface\n", 38);
 
   if (!quiet) fprintf(stdout, "Capturing...\n");
   // Run graph
@@ -1025,7 +1026,7 @@ int main(int argc, char **argv)
 
     // If the Run function returned something else,
     // there must be a problem
-    exit_message("Could not run filter graph\n", 40);
+    exit_message("Could not run filter graph\n", 39);
   }
 
   // Wait for specified time delay (if any)
@@ -1047,7 +1048,7 @@ int main(int argc, char **argv)
     // means that the filter graph is still starting up and
     // no data has arrived yet in the sample grabber filter.
     if (hr != S_OK && hr != VFW_E_WRONG_STATE)
-      exit_message("Could not get buffer size\n", 41);
+      exit_message("Could not get buffer size\n", 40);
   }
 
   // Stop the graph
@@ -1056,12 +1057,12 @@ int main(int argc, char **argv)
   // Allocate buffer for image
   imgBuffer = new char[imgBufferSize];
   if (!imgBuffer)
-    exit_message("Could not allocate data buffer for image\n", 42);
+    exit_message("Could not allocate data buffer for image\n", 41);
 
   // Retrieve image data from sample grabber buffer
   hr = pSampleGrabber->GetCurrentBuffer(&imgBufferSize, (long *)imgBuffer);
   if (hr != S_OK)
-    exit_message("Could not get buffer data from sample grabber\n", 43);
+    exit_message("Could not get buffer data from sample grabber\n", 42);
 
   // Get the media type from the sample grabber filter
   AM_MEDIA_TYPE mt;
@@ -1071,8 +1072,9 @@ int main(int argc, char **argv)
   hr = pSampleGrabber->GetConnectedMediaType((DexterLib::_AMMediaType *)&mt);
 #endif
   if (hr != S_OK)
-    exit_message("Could not get media type\n", 44);
+    exit_message("Could not get media type\n", 43);
 
+  bool write_header = true;
   // Retrieve format information
   VIDEOINFOHEADER *pVih = NULL;
   if ((mt.formattype == FORMAT_VideoInfo) &&
@@ -1085,34 +1087,41 @@ int main(int argc, char **argv)
     fourcc = pVih->bmiHeader.biCompression;
     if (fourcc == YUY2) {
       // Convert YUY2 image to RGB image
-      yuy2_rgb(pVih->bmiHeader.biWidth, pVih->bmiHeader.biHeight, &rgbBufferSize);
+      yuy2_rgb(pVih->bmiHeader.biWidth, pVih->bmiHeader.biHeight, &rgbBufferSize); // e44
       fix_bmiHeader(pVih, rgbBufferSize);
     }
     else if (fourcc == I420) {
       // Convert I420 image to RGB image
-      i420_rgb(pVih->bmiHeader.biWidth, pVih->bmiHeader.biHeight, &rgbBufferSize);
+      i420_rgb(pVih->bmiHeader.biWidth, pVih->bmiHeader.biHeight, &rgbBufferSize); // e45
       fix_bmiHeader(pVih, rgbBufferSize);
     }
     else if (fourcc == MJPG) {
       // Fix MJPG header (add default huffman table) if necessary
-      if (memcmp("AVI1", imgBuffer + 6, 4) == 0) mjpeg_fix(&imgBufferSize);
+      if (memcmp("AVI1", imgBuffer + 6, 4) == 0) mjpeg_fix(&imgBufferSize); // e46
 
       // Allocate buffer for RGB image
       rgbBuffer = new char[imgBufferSize];
       if (!rgbBuffer)
-        exit_message("Could not allocate data buffer for RGB image\n", 45);
+        exit_message("Could not allocate data buffer for RGB image\n", 47);
 
       memcpy(rgbBuffer, imgBuffer, imgBufferSize);
       rgbBufferSize = imgBufferSize;
+      write_header = false;
     }
-    else {
+    else { // RGB or any other fourcc
       // Allocate buffer for RGB image
       rgbBuffer = new char[imgBufferSize];
       if (!rgbBuffer)
-        exit_message("Could not allocate data buffer for RGB image\n", 45);
+        exit_message("Could not allocate data buffer for RGB image\n", 48);
 
       memcpy(rgbBuffer, imgBuffer, imgBufferSize);
       rgbBufferSize = imgBufferSize;
+
+      if (fourcc != BI_RGB) {
+        fprintf(stderr, "Unsupported image format (%s) captured\n",
+                         fourcc2str(fourcc));
+        write_header = false;
+      }
     }
 
     // Print the format of the captured image
@@ -1141,11 +1150,11 @@ int main(int argc, char **argv)
     HANDLE hf = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_WRITE,
                            NULL, CREATE_ALWAYS, 0, NULL);
     if (hf == INVALID_HANDLE_VALUE)
-      exit_message("Error opening output file\n", 46);
+      exit_message("Error opening output file\n", 49);
 
     DWORD dwWritten = 0;
 
-    if (fourcc != MJPG) {
+    if (write_header) {
       // Write the file header
       WriteFile(hf, &bfh, sizeof(bfh), &dwWritten, NULL);
       WriteFile(hf, HEADER(pVih), cbBitmapInfoSize, &dwWritten, NULL);
@@ -1156,7 +1165,7 @@ int main(int argc, char **argv)
     CloseHandle(hf);
   }
   else
-    exit_message("Wrong media type\n", 47);
+    exit_message("Wrong media type\n", 50);
 
   // Clean up and exit
   _FreeMediaType(mt);
